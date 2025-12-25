@@ -13,6 +13,46 @@ class GroceryList extends StatefulWidget {
 
 class _GroceryListState extends State<GroceryList> {
   int _currentIndex = 1;
+  final Set<String> _selectedIds = {};
+
+  void _onReorder(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) newIndex -= 1;
+      final item = dummyGroceryItems.removeAt(oldIndex);
+      dummyGroceryItems.insert(newIndex, item);
+    });
+  }
+
+  bool get _selectionMode => _selectedIds.isNotEmpty;
+
+  void _toggleSelection(String id) {
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+      } else {
+        _selectedIds.add(id);
+      }
+    });
+  }
+
+  void _enterSelection(String id) {
+    setState(() {
+      _selectedIds.add(id);
+    });
+  }
+
+  void _clearSelection() {
+    setState(() {
+      _selectedIds.clear();
+    });
+  }
+
+  void _deleteSelected() {
+    setState(() {
+      dummyGroceryItems.removeWhere((g) => _selectedIds.contains(g.id));
+      _selectedIds.clear();
+    });
+  }
 
   void onCreate() async {
     // Navigate to the form screen using the Navigator push
@@ -36,11 +76,41 @@ class _GroceryListState extends State<GroceryList> {
       content = IndexedStack(
         index: _currentIndex,
         children: [
-          ListView.builder(
-            itemCount: dummyGroceryItems.length,
-            itemBuilder: (context, index) =>
-                GroceryTile(grocery: dummyGroceryItems[index]),
-          ),
+          // When in selection mode we disable reordering and show checkboxes
+          if (!_selectionMode)
+            ReorderableListView(
+              onReorder: _onReorder,
+              children: [
+                for (final g in dummyGroceryItems)
+                  ListTile(
+                    key: ValueKey(g.id),
+                    leading: Container(width: 15, height: 15, color: g.category.color),
+                    title: Text(g.name),
+                    trailing: Text(g.quantity.toString()),
+                    onLongPress: () => _enterSelection(g.id),
+                    onTap: () {},
+                  ),
+              ],
+            )
+          else
+            ListView.builder(
+              itemCount: dummyGroceryItems.length,
+              itemBuilder: (context, index) {
+                final g = dummyGroceryItems[index];
+                final selected = _selectedIds.contains(g.id);
+                return ListTile(
+                  leading: Checkbox(
+                    value: selected,
+                    onChanged: (_) => _toggleSelection(g.id),
+                  ),
+                  title: Text(g.name),
+                  subtitle: Text(g.category.name),
+                  trailing: Text(g.quantity.toString()),
+                  onTap: () => _toggleSelection(g.id),
+                );
+              },
+            ),
+
           pages.SearchBar(),
         ],
       );
