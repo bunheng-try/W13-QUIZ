@@ -84,10 +84,12 @@ class _GroceryListState extends State<GroceryList> {
                 for (final g in dummyGroceryItems)
                   ListTile(
                     key: ValueKey(g.id),
-                    leading: Container(width: 15, height: 15, color: g.category.color),
+                    leading: GestureDetector(
+                      onLongPress: () => _enterSelection(g.id),
+                      child: Container(width: 15, height: 15, color: g.category.color),
+                    ),
                     title: Text(g.name),
                     trailing: Text(g.quantity.toString()),
-                    onLongPress: () => _enterSelection(g.id),
                     onTap: () {},
                   ),
               ],
@@ -103,7 +105,13 @@ class _GroceryListState extends State<GroceryList> {
                     value: selected,
                     onChanged: (_) => _toggleSelection(g.id),
                   ),
-                  title: Text(g.name),
+                  title: Row(
+                    children: [
+                      Container(width: 15, height: 15, color: g.category.color),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(g.name)),
+                    ],
+                  ),
                   subtitle: Text(g.category.name),
                   trailing: Text(g.quantity.toString()),
                   onTap: () => _toggleSelection(g.id),
